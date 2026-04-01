@@ -1,4 +1,4 @@
-month,branch_name,monthly_profit,monthly_expenses,monthly_donations,customer_wait_time_seconds,monthly_profit_rolling_mean,monthly_expenses_rolling_mean,CUSTOMER_WAIT_TIME_SECONDS_rolling_mean,monthly_profit_rolling_SD,monthly_expenses_rolling_SD,customer_wait_time_seconds_rolling_SD,avg_monthly_profit
+month,branch_name,monthly_profit,monthly_expenses,monthly_donations,customer_wait_time_seconds,monthly_profit_rolling_mean,monthly_expenses_rolling_mean,CUSTOMER_WAIT_TIME_SECONDS_rolling_mean,monthly_profit_rolling_SD,monthly_expenses_rolling_SD,customer_wait_time_seconds_rolling_SD,avg_store_profit
 2025-01,Northside,52000,38000,1200,1450,,,,,,,55000.0
 2025-02,Eastwood,48000,35000,900,1320,,,,,,,50250.0
 2025-03,Southgate,61000,42000,1500,1580,53666.666666666664,38333.333333333336,1450.0,6658.328118479394,3511.884584284245,130.0,64000.0
