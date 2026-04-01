@@ -119,6 +119,13 @@ def main() -> None:
     # row 4 → mean of rows [2,3,4]
 
     WINDOW_SIZE: int = 3
+    # ----------------------------------------------------
+    # STEP 3.1.1: AVERAGE REQUESTS AUDITED BY AN AUDITOR
+    # ----------------------------------------------------
+    df = pl.read_csv(DATA_FILE)
+    avg_requests_audited_recipe = df.group_by("auditor_name").agg(
+        pl.col("requests").mean().alias("avg_requests_audited")
+    )
 
     # ----------------------------------------------------
     # STEP 3.1: DEFINE ROLLING MEAN FOR # OF REQUESTS
@@ -164,7 +171,7 @@ def main() -> None:
     # STEP 3.4: APPLY THE ROLLING RECIPES IN A NEW DATAFRAME
     # ----------------------------------------------------
     # with_columns() evaluates the recipes and adds the new columns
-    df_with_rolling = df.with_columns(
+    df_final = df.with_columns(
         [
             requests_rolling_mean_recipe,
             errors_rolling_mean_recipe,
@@ -175,12 +182,17 @@ def main() -> None:
         ]
     )
 
+    # -----------------------------------------------------
+    # STEP 3.1.2: Add avg_requests_audited_recipe to df
+    # -----------------------------------------------------
+    df_final = df_final.join(avg_requests_audited_recipe, on="auditor_name", how="left")
+
     LOG.info("Computed rolling mean signals")
 
     # ----------------------------------------------------
     # STEP 4: SAVE RESULTS AS AN ARTIFACT
     # ----------------------------------------------------
-    df_with_rolling.write_csv(OUTPUT_FILE)
+    df_final.write_csv(OUTPUT_FILE)
     LOG.info(f"Wrote rolling monitoring file: {OUTPUT_FILE}")
 
     LOG.info("========================")
