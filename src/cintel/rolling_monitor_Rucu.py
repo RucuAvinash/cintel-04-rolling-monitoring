@@ -1,18 +1,18 @@
 """
-rolling_monitor_case.py - Project script (example).
+rolling_monitor_RucuAvinash.py - Project script (example).
 
-Author: Denise Case
-Date: 2026-03
+Author: Rucu Sethu
+Date: 2026-03-31
 
 Time-Series System Metrics Data
 
 - Data is taken from a system that records operational metrics over time.
-- Each row represents one observation at a specific timestamp.
+- Each row represents one observation for that month.
 - The CSV file includes these columns:
-  - timestamp: when the observation occurred
-  - requests: number of requests handled
-  - errors: number of failed requests
-  - total_latency_ms: total response time in milliseconds
+  - Month: when the observation occurred
+  - Monthly_Profit: Monthly profit of the store
+  - Monthly Expenses: Monthly expenses incurred by the store
+  - total_customer_wait_time_ms: total wait time in milliseconds
 
 Purpose
 
@@ -102,9 +102,9 @@ def main() -> None:
     # STEP 2: SORT DATA BY TIME
     # ----------------------------------------------------
     # Time-series analysis requires observations to be ordered.
-    df = df.sort("timestamp")
+    df = df.sort("month")
 
-    LOG.info("Sorted records by timestamp")
+    LOG.info("Sorted records by month")
 
     # ----------------------------------------------------
     # STEP 3: DEFINE ROLLING WINDOW RECIPES
@@ -120,77 +120,87 @@ def main() -> None:
 
     WINDOW_SIZE: int = 3
     # ----------------------------------------------------
-    # STEP 3.1.1: AVERAGE REQUESTS AUDITED BY AN AUDITOR
+    # STEP 4: AVERAGE MONTHLY PROFIT GROUPED BY BRANCH
     # ----------------------------------------------------
     df = pl.read_csv(DATA_FILE)
-    avg_requests_audited_recipe = df.group_by("auditor_name").agg(
-        pl.col("requests").mean().alias("avg_requests_audited")
+    avg_monthly_profit_recipe = df.group_by("branch_name").agg(
+        pl.col("monthly_profit").mean().alias("avg_monthly_profit")
     )
 
     # ----------------------------------------------------
-    # STEP 3.1: DEFINE ROLLING MEAN FOR # OF REQUESTS
+    # STEP 5: DEFINE ROLLING MEAN FOR # OF MONTHLY_PROFIT
     # ----------------------------------------------------
-    # The `requests` column holds the count of requests handled at each timestamp.
-    requests_rolling_mean_recipe: pl.Expr = (
-        pl.col("requests").rolling_mean(WINDOW_SIZE).alias("requests_rolling_mean")
+    # The `MONTHLY_PROFIT` column holds the profit for each month.
+    monthly_profit_rolling_mean_recipe: pl.Expr = (
+        pl.col("monthly_profit")
+        .rolling_mean(WINDOW_SIZE)
+        .alias("monthly_profit_rolling_mean")
     )
 
     # --------------------------------------------------------------------
-    # STEP 3.1.1: Modification. Define ROLLING SD FOR # OF REQUESTS
+    # STEP 6: Modification. Define ROLLING SD FOR # MONTHLY PROFIT
     # --------------------------------------------------------------------
-    requests_rolling_SD_recipe: pl.Expr = (
-        pl.col("requests").rolling_std(WINDOW_SIZE).alias("requests_rolling_SD")
+    monthly_profit_rolling_SD_recipe: pl.Expr = (
+        pl.col("monthly_profit")
+        .rolling_std(WINDOW_SIZE)
+        .alias("monthly_profit_rolling_SD")
     )
     # ------------------------------------------------------------------
-    # STEP 3.2: DEFINE ROLLING MEAN FOR # OF ERRORS
+    # STEP 7: DEFINE ROLLING MEAN FOR # OF MONTHLY EXPENSES
     # -----------------------------------------------------------------
-    # The `errors` column holds the count of errors encountered at each timestamp.
-    errors_rolling_mean_recipe: pl.Expr = (
-        pl.col("errors").rolling_mean(WINDOW_SIZE).alias("errors_rolling_mean")
+    # The `monthly_expenses` column holds the  expenses for each month
+    monthly_expenses_rolling_mean_recipe: pl.Expr = (
+        pl.col("monthly_expenses")
+        .rolling_mean(WINDOW_SIZE)
+        .alias("monthly_expenses_rolling_mean")
     )
     # --------------------------------------------------------------------
-    # STEP 3.2.1: MODIFICATION:DEFINE ROLLING SD FOR # OF ERRORS
+    # STEP 8: MODIFICATION:DEFINE ROLLING SD FOR # OF MONTHLY EXPENSES
     # -------------------------------------------------------------------
-    errors_rolling_SD_recipe: pl.Expr = (
-        pl.col("errors").rolling_std(WINDOW_SIZE).alias("errors_rolling_SD")
+    monthly_expenses_rolling_SD_recipe: pl.Expr = (
+        pl.col("monthly_expenses")
+        .rolling_std(WINDOW_SIZE)
+        .alias("monthly_expenses_rolling_SD")
     )
-    # STEP 3.3: DEFINE ROLLING MEAN FOR LATENCY
+    # STEP 9: DEFINE ROLLING MEAN FOR CUSTOMER_WAIT_TIME_SECONDS
     # ----------------------------------------------------
-    # The `total_latency_ms` column holds the total latency in milliseconds at each timestamp.
-    latency_rolling_mean_recipe: pl.Expr = (
-        pl.col("total_latency_ms")
+    # The `CUSTOMER_WAIT_TIME_SECONDS` column holds the total customer_wait time in milliseconds for each month.
+    CUSTOMER_WAIT_TIME_SECONDS_rolling_mean_recipe: pl.Expr = (
+        pl.col("customer_wait_time_seconds")
         .rolling_mean(WINDOW_SIZE)
-        .alias("latency_rolling_mean")
+        .alias("CUSTOMER_WAIT_TIME_SECONDS_rolling_mean")
     )
     # ---------------------------------------------------------------
-    # STEP 3.3.1: MODIFICATION: DEFINE ROLLING SD # OF LATENCY
+    # STEP 10: MODIFICATION: DEFINE ROLLING SD # OF CUSTOMER_WAIT_TIME_SECONDS
     # --------------------------------------------------------------
-    latency_rolling_SD_recipe: pl.Expr = (
-        pl.col("total_latency_ms").rolling_std(WINDOW_SIZE).alias("rolling_latency_SD")
+    customer_wait_time_SD_recipe: pl.Expr = (
+        pl.col("customer_wait_time_seconds")
+        .rolling_std(WINDOW_SIZE)
+        .alias("customer_wait_time_seconds_rolling_SD")
     )
-    # STEP 3.4: APPLY THE ROLLING RECIPES IN A NEW DATAFRAME
+    # STEP 11: APPLY THE ROLLING RECIPES IN A NEW DATAFRAME
     # ----------------------------------------------------
     # with_columns() evaluates the recipes and adds the new columns
     df_final = df.with_columns(
         [
-            requests_rolling_mean_recipe,
-            errors_rolling_mean_recipe,
-            latency_rolling_mean_recipe,
-            requests_rolling_SD_recipe,
-            errors_rolling_SD_recipe,
-            latency_rolling_SD_recipe,
+            monthly_profit_rolling_mean_recipe,
+            monthly_expenses_rolling_mean_recipe,
+            CUSTOMER_WAIT_TIME_SECONDS_rolling_mean_recipe,
+            monthly_profit_rolling_SD_recipe,
+            monthly_expenses_rolling_SD_recipe,
+            customer_wait_time_SD_recipe,
         ]
     )
 
     # -----------------------------------------------------
-    # STEP 3.1.2: Add avg_requests_audited_recipe to df
+    # STEP 12: Add avg_monthly_profit to df
     # -----------------------------------------------------
-    df_final = df_final.join(avg_requests_audited_recipe, on="auditor_name", how="left")
+    df_final = df_final.join(avg_monthly_profit_recipe, on="branch_name", how="left")
 
     LOG.info("Computed rolling mean signals")
 
     # ----------------------------------------------------
-    # STEP 4: SAVE RESULTS AS AN ARTIFACT
+    # STEP 13: SAVE RESULTS AS AN ARTIFACT
     # ----------------------------------------------------
     df_final.write_csv(OUTPUT_FILE)
     LOG.info(f"Wrote rolling monitoring file: {OUTPUT_FILE}")
@@ -200,11 +210,15 @@ def main() -> None:
     LOG.info("========================")
     LOG.info("END main()")
     # -----------------------------------------------------
-    # STEP 5: Visualize the rolling SD in a bar chart
+    # STEP 14: Visualize the rolling SD in a bar chart
     # -----------------------------------------------------
     df = pd.read_csv(OUTPUT_FILE)
     # Keep only rows with SD values
-    sd_cols = ["requests_rolling_SD", "errors_rolling_SD", "rolling_latency_SD"]
+    sd_cols = [
+        "monthly_profit_rolling_SD",
+        "monthly_expenses_rolling_SD",
+        "customer_wait_time_seconds_rolling_SD",
+    ]
     df_sd = df.dropna(subset=sd_cols)
 
     # Create an index for x-axis
@@ -213,22 +227,34 @@ def main() -> None:
     width = 0.50
     plt.figure(figsize=(12, 6))
     # Plot grouped bars
-    plt.bar(x - width / 2, df_sd["requests_rolling_SD"], width, label="Requests SD")
-    plt.bar(x + width / 2, df_sd["rolling_latency_SD"], width, label="Latency SD")
-    # Line Chart for Errors
+    plt.bar(
+        x - width / 2,
+        df_sd["monthly_profit_rolling_SD"],
+        width,
+        label="Monthly Profit SD",
+    )
+    plt.bar(
+        x + width / 2,
+        df_sd["customer_wait_time_seconds_rolling_SD"],
+        width,
+        label=" Customer Wait time SD",
+    )
+    # Line Chart for monthly_expenses
     plt.plot(
         x,
-        df_sd["errors_rolling_SD"],
+        df_sd["monthly_expenses_rolling_SD"],
         marker="x",
         linewidth=3.5,
         color="#C33582",
-        label="Errors SD",
+        label="Expenses SD",
     )
 
     # Labels and Title
     plt.xlabel("Rolling WIndow Index")
     plt.ylabel("Standard Deviation")
-    plt.title("Rolling Standard Deviation for Requests, Errors, Latency")
+    plt.title(
+        "Rolling Standard Deviation for  Monthly Profit, Expense, Customer_wait_time"
+    )
 
     plt.legend()
     plt.tight_layout()
