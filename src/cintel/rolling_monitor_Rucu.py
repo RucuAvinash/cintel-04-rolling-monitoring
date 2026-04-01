@@ -123,8 +123,8 @@ def main() -> None:
     # STEP 4: AVERAGE MONTHLY PROFIT GROUPED BY BRANCH
     # ----------------------------------------------------
     df = pl.read_csv(DATA_FILE)
-    avg_monthly_profit_recipe = df.group_by("branch_name").agg(
-        pl.col("monthly_profit").mean().alias("avg_monthly_profit")
+    avg_store_profit_recipe = df.group_by("branch_name").agg(
+        pl.col("monthly_profit").mean().alias("avg_store_profit")
     )
 
     # ----------------------------------------------------
@@ -193,9 +193,9 @@ def main() -> None:
     )
 
     # -----------------------------------------------------
-    # STEP 12: Add avg_monthly_profit to df
+    # STEP 12: Add avg_store_profit to df
     # -----------------------------------------------------
-    df_final = df_final.join(avg_monthly_profit_recipe, on="branch_name", how="left")
+    df_final = df_final.join(avg_store_profit_recipe, on="branch_name", how="left")
 
     LOG.info("Computed rolling mean signals")
 
